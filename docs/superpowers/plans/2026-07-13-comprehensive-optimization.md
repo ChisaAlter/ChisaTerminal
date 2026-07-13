@@ -21,7 +21,7 @@
 | 2 安全/正确性 | ✅ | 宽度/PTY/壁纸 + Hook 威胁模型文档 |
 | 3 工程门禁 | ✅ | `test:ci` / ESLint / GH Actions / 可移植 preload |
 | 4 命名+打包 | ✅ 主体 | chisa.* 双读；preload 复用 constants；builder 不整包 node_modules |
-| 5 产品深化 | ⏳ 部分 | 空 Agent 目录已删；E2E 加深/Agent UI 仍待做 |
+| 5 产品深化 | ✅ 主体 | AgentStatusBar + platform-hooks + E2E 多场景通过 |
 
 ---
 

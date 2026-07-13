@@ -9,8 +9,10 @@
 - **浏览器侧栏**：按终端打开 http(s) 页面（沙箱 webview）
 - **主题 / 壁纸 / 字体**：设置持久化到 `electron-store`
 - **命令面板与快捷操作**：可注入带 `{cwd}` 占位符的命令
-- **PowerShell Hook**（Windows）：通过 Named Pipe + 会话 token 上报 idle/running/finished
+- **PowerShell Hook**（Windows）：通过 Named Pipe + 会话 token 上报 idle/running/finished；Agent 状态栏展示聚焦终端状态
 - **国际化**：简体中文 / English
+
+跨平台 Hook 策略见 [docs/platform-hooks.md](./docs/platform-hooks.md)。
 
 ## 环境要求
 

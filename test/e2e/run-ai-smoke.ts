@@ -1,6 +1,5 @@
 /**
- * AI 功能冒烟测试。
- * 验证启动后 Agent 状态栏可见，并能读取初始状态文本。
+ * AI / Agent status smoke: agent-status-bar must be present with a known status.
  */
 import path from 'node:path'
 import {
@@ -10,6 +9,7 @@ import {
   connectCDP,
   evaluate,
   captureScreenshot,
+  wait,
   type CDPClient,
   type ChildProcess,
 } from './cdp-driver.js'
@@ -19,20 +19,27 @@ const OUTPUT_DIR = path.join(process.cwd(), 'e2e-screenshots')
 async function runAgentSmoke(client: CDPClient): Promise<void> {
   console.log('开始执行 AI 功能冒烟测试...')
 
-  const statusText = await evaluate<string>(
+  const exists = await evaluate<boolean>(
     client,
-    `
-      (() => {
-        const el = document.querySelector('[class*="bg-sidebar"]')
-        return el ? el.textContent : ''
-      })()
-    `
+    `!!document.querySelector('[data-testid="agent-status-bar"]')`
   )
-  console.log(`Agent 状态栏文本：${statusText}`)
+  if (!exists) throw new Error('未找到 [data-testid="agent-status-bar"]')
 
-  const hasStatus = /就绪|等待输入|运行中|错误/.test(statusText)
-  if (!hasStatus) {
-    throw new Error('未在状态栏检测到 AI 状态文本')
+  const status = await evaluate<string>(
+    client,
+    `document.querySelector('[data-testid="agent-status-bar"]')?.getAttribute('data-agent-status') ?? ''`
+  )
+  const label = await evaluate<string>(
+    client,
+    `document.querySelector('[data-testid="agent-status-label"]')?.textContent?.trim() ?? ''`
+  )
+  console.log(`Agent 状态：status=${status} label=${label}`)
+
+  if (!['idle', 'thinking', 'working', 'error'].includes(status)) {
+    throw new Error(`未知 data-agent-status: ${status}`)
+  }
+  if (!/就绪|等待输入|运行中|错误|Ready|Waiting|Working|Error/i.test(label)) {
+    throw new Error(`未在状态栏检测到 AI 状态文本：${label}`)
   }
 
   await captureScreenshot(client, 'ai-smoke.png', { outputDir: OUTPUT_DIR })
@@ -47,8 +54,9 @@ async function main(): Promise<void> {
 
   let client: CDPClient | undefined
   try {
-    await waitForCDP()
+    await waitForCDP({ readyTimeout: 30000 })
     client = await connectCDP()
+    await wait(1500)
     await runAgentSmoke(client)
   } finally {
     if (client) await client.close()

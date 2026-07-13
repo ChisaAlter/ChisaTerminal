@@ -198,6 +198,7 @@ function Sidebar({ onOpenSettings }: SidebarProps = {}) {
         </div>
         <button
           onClick={() => onOpenSettings?.()}
+          data-testid="open-settings"
           className="w-full px-3 py-2 rounded-md text-sm text-text-secondary hover:bg-border hover:text-foreground transition-colors text-left flex items-center gap-2"
         >
           <span>⚙</span>

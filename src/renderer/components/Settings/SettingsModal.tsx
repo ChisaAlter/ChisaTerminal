@@ -6,7 +6,7 @@ import { useQuickActionsStore } from '../../stores/useQuickActionsStore.js'
 import { DEFAULT_SETTINGS, type AppSettings, type Language } from '../../../shared/settings.js'
 import { readFileAsBase64, pixelateImage, compressImage, getBase64Size, saveWallpaperToUserData, ensureDataUrl, MAX_WALLPAPER_SIZE } from '../../utils/wallpaper.js'
 
-const APP_VERSION = '1.0.0'
+const APP_VERSION = '1.1.0'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -586,6 +586,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
+      data-testid="settings-modal-overlay"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/50" />
@@ -594,6 +595,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-modal-title"
+        data-testid="settings-modal"
         tabIndex={-1}
         className="relative w-full max-w-3xl h-[500px] bg-canvas border border-border rounded-lg shadow-2xl overflow-hidden flex outline-none wallpaper-glass"
         onClick={(e) => e.stopPropagation()}

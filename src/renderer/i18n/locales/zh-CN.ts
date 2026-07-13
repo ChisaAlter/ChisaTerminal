@@ -154,4 +154,6 @@ export const zhCN = {
   'agent.status.working': '运行中',
   'agent.status.error': '错误',
   'agent.exit_code': '退出码 {{code}}',
+  'agent.status_bar_label': 'Agent 状态：{{status}}',
+  'agent.hooks_unavailable': 'Hook 不可用（仅 Windows PowerShell 完整支持）',
 }

@@ -1,7 +1,7 @@
 import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TerminalTab } from '@shared/types'
-import { useAgentStore, type AgentStatus } from '../../stores/useAgentStore.js'
+import AgentStatusBar from '../Agent/AgentStatusBar.js'
 
 interface TabBarProps {
   tabs: TerminalTab[]
@@ -81,31 +81,11 @@ function TabBar({
     }
   }, [tabs, selectedTabId, focusTabAtIndex])
 
-  const status = useAgentStore((s) => s.status)
-  const statusText = useAgentStore((s) => s.statusText)
-  const focusedTerminalId = useAgentStore((s) => s.focusedTerminalId)
-  const terminalState = useAgentStore((s) =>
-    focusedTerminalId ? s.terminalStates[focusedTerminalId] : undefined
-  )
-  const cwd = terminalState?.cwd ?? null
-  const command = terminalState?.command ?? null
-
-  const statusConfig: Record<AgentStatus, { color: string; label: string }> = {
-    idle: { color: 'bg-green-500', label: t('agent.status.idle') },
-    thinking: { color: 'bg-yellow-500', label: t('agent.status.thinking') },
-    working: { color: 'bg-blue-500', label: t('agent.status.working') },
-    error: { color: 'bg-red-500', label: t('agent.status.error') },
-  }
-  const config = statusConfig[status]
-
-  function shortCwd(path: string): string {
-    const parts = path.replace(/\\/g, '/').split('/').filter(Boolean)
-    if (parts.length <= 2) return path
-    return '.../' + parts.slice(-2).join('/')
-  }
-
   return (
-    <div className="h-9 shrink-0 flex items-center bg-sidebar border-b border-border px-2 gap-1 wallpaper-glass drag-region pr-[140px]">
+    <div
+      className="h-9 shrink-0 flex items-center bg-sidebar border-b border-border px-2 gap-1 wallpaper-glass drag-region pr-[140px]"
+      data-testid="tab-bar"
+    >
       <div
         className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto no-drag"
         role="tablist"
@@ -121,6 +101,8 @@ function TabBar({
             role="tab"
             aria-selected={selected}
             tabIndex={selected ? 0 : -1}
+            data-testid="terminal-tab"
+            data-tab-id={tab.id}
             onClick={() => onSelectTab(tab.id)}
             onDoubleClick={() => handleDoubleClick(tab)}
             className={`
@@ -163,35 +145,14 @@ function TabBar({
       </div>
       <button
         onClick={onAddTab}
+        data-testid="tab-add"
         className="w-7 h-7 rounded-md flex items-center justify-center text-text-secondary hover:text-foreground hover:bg-border transition-colors no-drag"
         title={t('tab.new')}
       >
         +
       </button>
 
-      {/* 底部状态栏合并到标签栏右侧，避免单独占用底部空间 */}
-      <div className="h-full flex items-center gap-2 ml-auto no-drag text-xs text-text-secondary">
-        <div
-          className={`w-2 h-2 rounded-full ${config.color} ${
-            status === 'thinking' || status === 'working' ? 'animate-pulse' : ''
-          }`}
-        />
-        <span>{statusText || config.label}</span>
-        {cwd && (
-          <>
-            <span className="text-border">•</span>
-            <span className="truncate max-w-[120px]" title={cwd}>
-              {shortCwd(cwd)}
-            </span>
-          </>
-        )}
-        {command && status === 'working' && (
-          <>
-            <span className="text-border">•</span>
-            <span className="truncate max-w-[120px] font-mono">{command}</span>
-          </>
-        )}
-      </div>
+      <AgentStatusBar />
     </div>
   )
 }

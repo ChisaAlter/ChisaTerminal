@@ -5,7 +5,10 @@
 import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
+import { createRequire } from 'node:module'
 import { spawn, type ChildProcess } from 'node:child_process'
+
+const require = createRequire(import.meta.url)
 
 export type { ChildProcess }
 
@@ -150,13 +153,41 @@ export function findPageTarget(targets: CDPTarget[], title: string): CDPTarget |
   return targets.find((t) => t.type === 'page' && t.title === title)
 }
 
+/** Prefer app page (file:// or titled ChisaTerminal); skip DevTools pages. */
+export function findAppPageTarget(targets: CDPTarget[]): CDPTarget | undefined {
+  const pages = targets.filter((t) => t.type === 'page')
+  return (
+    pages.find((t) => t.title === 'ChisaTerminal') ||
+    pages.find((t) => t.url.startsWith('file:') && !t.url.includes('devtools')) ||
+    pages.find(
+      (t) =>
+        !t.url.startsWith('devtools:') &&
+        !t.title.includes('DevTools') &&
+        (t.url.includes('index.html') || t.url.includes('localhost'))
+    )
+  )
+}
+
 export async function connectCDP(options: CDPOptions = {}): Promise<CDPClient> {
-  const targets = await listTargets(options)
-  const title = 'ChisaTerminal'
-  const page = findPageTarget(targets, title)
-  if (!page) {
-    throw new Error(`未找到标题为“${title}”的 CDP 页面目标`)
+  const host = options.host ?? DEFAULT_HOST
+  const port = options.port ?? DEFAULT_PORT
+  const timeout = options.readyTimeout ?? DEFAULT_READY_TIMEOUT
+  const deadline = Date.now() + timeout
+  let page: CDPTarget | undefined
+
+  while (Date.now() < deadline) {
+    const targets = await listTargets({ host, port })
+    page = findAppPageTarget(targets)
+    if (page) break
+    await wait(300)
   }
+
+  if (!page) {
+    const targets = await listTargets({ host, port })
+    const summary = targets.map((t) => `${t.type}:${t.title}:${t.url}`).join(' | ')
+    throw new Error(`未找到 ChisaTerminal 页面目标。现有：${summary}`)
+  }
+
   const client = new CDPClient(page.webSocketDebuggerUrl)
   await client.open()
   await client.send('Runtime.enable')
@@ -165,9 +196,20 @@ export async function connectCDP(options: CDPOptions = {}): Promise<CDPClient> {
   return client
 }
 
+function resolveElectronBinary(): string {
+  if (process.env.ELECTRON_PATH) return process.env.ELECTRON_PATH
+  try {
+    // When required from Node (not inside Electron), the package exports the binary path.
+    const binary = require('electron') as string
+    if (typeof binary === 'string' && binary.length > 0) return binary
+  } catch {
+    // fall through
+  }
+  return process.platform === 'win32' ? 'electron.cmd' : 'electron'
+}
+
 export function launchElectron(options: ElectronLaunchOptions = {}): ChildProcess {
   const entry = options.entry ?? process.cwd()
-  const host = options.host ?? DEFAULT_HOST
   const port = options.port ?? DEFAULT_PORT
   const args = [
     entry,
@@ -177,10 +219,11 @@ export function launchElectron(options: ElectronLaunchOptions = {}): ChildProces
   const env = {
     ...process.env,
     NODE_ENV: 'e2e-test',
+    // Prefer packaged renderer/main for e2e stability
     ...options.env,
   }
 
-  const electronPath = process.env.ELECTRON_PATH ?? 'electron'
+  const electronPath = resolveElectronBinary()
   const proc = spawn(electronPath, args, {
     env,
     stdio: 'inherit',

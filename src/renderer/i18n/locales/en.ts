@@ -154,4 +154,6 @@ export const en = {
   'agent.status.working': 'Working',
   'agent.status.error': 'Error',
   'agent.exit_code': 'Exit code {{code}}',
+  'agent.status_bar_label': 'Agent status: {{status}}',
+  'agent.hooks_unavailable': 'Hooks unavailable (full support: Windows PowerShell only)',
 }

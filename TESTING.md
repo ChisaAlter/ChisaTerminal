@@ -47,8 +47,9 @@ npm run test:e2e
 
 1. 等待 CDP 服务在 `127.0.0.1:9223` 就绪。
 2. 连接到标题为 `ChisaTerminal` 的页面目标。
-3. 校验页面标题与 DOM 就绪状态。
-4. 保存截图到 `e2e-screenshots/e2e-smoke.png`。
+3. 校验页面标题、TabBar、`[data-testid="agent-status-bar"]`。
+4. 新建标签、打开/关闭设置（Ctrl+,）、打开/关闭命令面板（Ctrl+Shift+P）。
+5. 截图保存到 `e2e-screenshots/`。
 
 ### AI 冒烟测试
 

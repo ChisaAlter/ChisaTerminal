@@ -107,10 +107,16 @@ export function createMainWindow(): BrowserWindow {
     return mainWindow
   }
 
+  // e2e / explicit prod: load dist renderer even when not packaged (electron .)
+  const forceProdUi =
+    process.env.NODE_ENV === 'e2e-test' ||
+    process.env.CHISA_E2E === '1' ||
+    process.env.CHISA_PROD === '1'
   const isDev =
-    !app.isPackaged ||
-    process.env.CHISA_DEV === 'true' ||
-    process.env.MUX0_DEV === 'true'
+    !forceProdUi &&
+    (!app.isPackaged ||
+      process.env.CHISA_DEV === 'true' ||
+      process.env.MUX0_DEV === 'true')
   // Allow emergency rollback: CHISA_SANDBOX=0 disables sandbox if a preload edge case appears.
   const sandboxEnabled = process.env.CHISA_SANDBOX !== '0'
 

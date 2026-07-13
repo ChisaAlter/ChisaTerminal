@@ -287,6 +287,7 @@ export default function CommandPalette({ isOpen, onClose, onOpenSettings }: Comm
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-24"
+      data-testid="command-palette-overlay"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/50" />
@@ -295,6 +296,7 @@ export default function CommandPalette({ isOpen, onClose, onOpenSettings }: Comm
         role="dialog"
         aria-modal="true"
         aria-label={t('palette.placeholder')}
+        data-testid="command-palette"
         className="relative w-full max-w-lg bg-canvas border border-border rounded-lg shadow-2xl overflow-hidden wallpaper-glass"
         onClick={(e) => e.stopPropagation()}
       >

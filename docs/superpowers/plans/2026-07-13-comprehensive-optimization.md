@@ -12,6 +12,17 @@
 
 **预估总工期:** 约 8–15 个有效人日（视 Electron 升级回归难度浮动）
 
+### 执行进度（2026-07-13）
+
+| Phase | 状态 | 备注 |
+|-------|------|------|
+| 0 仓库卫生 | ✅ | commit `8c57a7d` |
+| 1 Electron+sandbox | ✅ | Electron **41.10.1**，sandbox 默认开；pack 成功 |
+| 2 安全/正确性 | ✅ | 宽度/PTY/壁纸 + Hook 威胁模型文档 |
+| 3 工程门禁 | ✅ | `test:ci` / ESLint / GH Actions / 可移植 preload |
+| 4 命名+打包 | ✅ 主体 | chisa.* 双读；preload 复用 constants；builder 不整包 node_modules |
+| 5 产品深化 | ⏳ 部分 | 空 Agent 目录已删；E2E 加深/Agent UI 仍待做 |
+
 ---
 
 ## 0. 范围与非目标

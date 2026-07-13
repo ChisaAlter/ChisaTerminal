@@ -1,0 +1,23 @@
+node_modules/
+dist/
+dist-build/
+dist-build-*/
+release/
+release-*/
+release2/
+release3/
+release4/
+e2e-screenshots/
+*.log
+.DS_Store
+Thumbs.db
+${env.ELECTRON_CACHE}/
+# ad-hoc debug screenshots / CDP scripts at repo root
+test-flow-step*.png
+test-screenshot-*.png
+test-toggle-*.png
+verify-sidebar.png
+test-pixelate-*.cdp.mjs
+# local eval run artifacts
+codex-candy-eval/**/run_*/
+.trae/

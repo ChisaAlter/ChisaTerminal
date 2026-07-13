@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-sidebar: #1e1e2e;
+  --color-canvas: #181825;
+  --color-foreground: #cdd6f4;
+  --color-border: #313244;
+  --color-border-strong: #45475a;
+  --color-accent: #89b4fa;
+  --color-selection: #45475a;
+  --color-text-secondary: #6c7086;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--color-foreground);
+  background: var(--color-canvas);
+  user-select: none;
+}
+
+.terminal-xterm {
+  height: 100%;
+  width: 100%;
+}
+
+.terminal-xterm .xterm-viewport {
+  overflow-y: scroll !important;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* 壁纸启用时的全局透明/毛玻璃效果 */
+html.wallpaper-enabled,
+html.wallpaper-enabled body,
+html.wallpaper-enabled #root {
+  background: transparent !important;
+}
+
+html.wallpaper-enabled {
+  --color-sidebar: rgba(30, 30, 46, 0.28);
+  --color-canvas: rgba(24, 24, 37, 0.32);
+  --color-border: rgba(49, 50, 68, 0.45);
+  --color-border-strong: rgba(69, 71, 90, 0.55);
+  --color-selection: rgba(69, 71, 90, 0.45);
+}
+
+html.wallpaper-enabled .wallpaper-glass {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+html.wallpaper-enabled .bg-sidebar {
+  border-right-color: rgba(49, 50, 68, 0.35);
+}
+
+html.wallpaper-enabled .terminal-xterm .xterm,
+html.wallpaper-enabled .terminal-xterm .xterm-viewport,
+html.wallpaper-enabled .terminal-xterm .xterm-screen {
+  background-color: transparent !important;
+}
+
+/* 毛玻璃放在 terminal-glass（外层稳定容器）上，而非 .terminal-xterm（xterm 内部每帧重绘）。
+   backdrop-filter 采样稳定的父级背后内容，不随 xterm 按键渲染而重计算，消除输入抖动 */
+html.wallpaper-enabled .terminal-glass {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+input, select, button {
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

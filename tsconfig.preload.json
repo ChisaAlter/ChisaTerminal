@@ -15,6 +15,6 @@
     "forceConsistentCasingInFileNames": true,
     "ignoreDeprecations": "6.0"
   },
-  "include": ["src/preload/**/*", "src/shared/**/*"],
+  "include": ["src/preload/**/*"],
   "exclude": ["node_modules", "dist"]
 }

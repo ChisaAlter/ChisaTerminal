@@ -148,6 +148,23 @@ export function createMainWindow(): BrowserWindow {
     },
   })
 
+  // Diagnose missing preload / electronAPI in production builds
+  mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error('[Window] preload-error:', preloadPath, error)
+  })
+  mainWindow.webContents.on('did-finish-load', () => {
+    void mainWindow?.webContents
+      .executeJavaScript('!!window.electronAPI && !!window.electronAPI.pty')
+      .then((ok) => {
+        if (!ok) {
+          console.error(
+            '[Window] electronAPI.pty missing after load — preload failed or sandbox blocked bridge'
+          )
+        }
+      })
+      .catch((err) => console.error('[Window] post-load probe failed:', err))
+  })
+
   const csp = isDev
     ? [
         "default-src 'self'",

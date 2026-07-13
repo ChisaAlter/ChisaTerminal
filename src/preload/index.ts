@@ -1,40 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import { IPC_CHANNELS } from '../shared/constants.js'
 import type { HookMessage } from '../shared/types.js'
 
-const CH = {
-  PTY: {
-    CREATE: 'pty:create',
-    WRITE: 'pty:write',
-    RESIZE: 'pty:resize',
-    CLOSE: 'pty:close',
-    OUTPUT: 'pty:output',
-    EXIT: 'pty:exit',
-    SESSION_COUNT: 'pty:sessionCount',
-  },
-  WINDOW: {
-    MINIMIZE: 'window:minimize',
-    MAXIMIZE: 'window:maximize',
-    CLOSE: 'window:close',
-    IS_MAXIMIZED: 'window:isMaximized',
-    MAXIMIZED_CHANGE: 'window:maximizedChange',
-  },
-  HOOK: {
-    MESSAGE: 'hook:message',
-  },
-  STORAGE: {
-    GET: 'storage:get',
-    SET: 'storage:set',
-  },
-  APP: {
-    RELOAD_SHORTCUTS: 'app:reloadShortcuts',
-  },
-  WALLPAPER: {
-    SAVE: 'wallpaper:save',
-  },
-  BROWSER: {
-    OPEN_URL: 'browser:openUrl',
-  },
-}
+const CH = IPC_CHANNELS
 
 // 按终端 ID 分发：单一 ipcRenderer 监听器按 terminalId 路由到对应回调集合，
 // 避免 N 个终端实例各自注册全局监听导致的 N 倍回调开销。

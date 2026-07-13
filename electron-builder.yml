@@ -6,10 +6,11 @@ files:
   - dist/**/*
   - hooks/**/*
   - package.json
-  - node_modules/**/*
+  # Let electron-builder collect production dependencies (do not ship all of node_modules)
 asar: true
 asarUnpack:
   - hooks/**/*
+  - node_modules/node-pty/**/*
 win:
   target: nsis
   icon: build/icon.png

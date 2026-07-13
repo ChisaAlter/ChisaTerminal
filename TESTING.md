@@ -67,6 +67,13 @@ npm run test
 
 依次运行 workspace 中配置的所有项目（unit + integration）。
 
+### CI 门禁（本地等价）
+
+```bash
+npm run test:ci   # typecheck + unit/integration
+npm run lint      # ESLint（warn 为主，不阻塞历史债）
+```
+
 ## 测试基础设施
 
 ### 临时目录隔离

@@ -21,3 +21,8 @@ test-pixelate-*.cdp.mjs
 # local eval run artifacts
 codex-candy-eval/**/run_*/
 .trae/
+
+# local agent tooling (not product)
+codex-candy-eval/
+mcps/
+

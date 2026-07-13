@@ -1,7 +1,7 @@
 import { globalShortcut } from 'electron'
 import { toggleMainWindow, getMainWindow } from './window.js'
 import { store } from './store.js'
-import { DEFAULT_SETTINGS_KEY } from '../shared/constants.js'
+import { DEFAULT_SETTINGS_KEY, LEGACY_SETTINGS_KEY } from '../shared/constants.js'
 import type { AppSettings } from '../shared/settings.js'
 import { DEFAULT_SETTINGS } from '../shared/settings.js'
 
@@ -16,7 +16,9 @@ export function unregisterGlobalShortcut(): void {
 
 export function registerGlobalShortcut(): void {
   unregisterGlobalShortcut()
-  const settings = store.get(DEFAULT_SETTINGS_KEY) as Partial<AppSettings> | undefined
+  const settings =
+    (store.get(DEFAULT_SETTINGS_KEY) as Partial<AppSettings> | undefined) ??
+    (store.get(LEGACY_SETTINGS_KEY) as Partial<AppSettings> | undefined)
   const merged = { ...DEFAULT_SETTINGS, ...settings }
   if (!merged.globalHotkeyEnabled) {
     return

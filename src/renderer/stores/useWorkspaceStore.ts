@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { useEffect } from 'react'
 import type { Workspace, TerminalTab, SplitNode, SplitDirection } from '@shared/types'
-import { DEFAULT_WORKSPACES_KEY } from '../../shared/constants.js'
+import { DEFAULT_WORKSPACES_KEY, LEGACY_WORKSPACES_KEY } from '../../shared/constants.js'
 import { useAgentStore } from './useAgentStore.js'
 import { useBrowserStore } from './useBrowserStore.js'
 
@@ -653,7 +653,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         set({ isLoaded: true })
         return
       }
-      const stored = await storage.get(DEFAULT_WORKSPACES_KEY)
+      let stored = await storage.get(DEFAULT_WORKSPACES_KEY)
+      let migratedFromLegacy = false
+      if (stored === undefined || stored === null) {
+        stored = await storage.get(LEGACY_WORKSPACES_KEY)
+        if (stored !== undefined && stored !== null) migratedFromLegacy = true
+      }
       if (!stored || typeof stored !== 'object') {
         set({ isLoaded: true })
         return
@@ -669,6 +674,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         selectedWorkspaceId: mapped.selectedWorkspaceId,
         isLoaded: true,
       })
+      if (migratedFromLegacy) {
+        try {
+          await storage.set?.(DEFAULT_WORKSPACES_KEY, data)
+        } catch {
+          // ignore migration write failures
+        }
+      }
     } catch {
       set({ isLoaded: true })
     }

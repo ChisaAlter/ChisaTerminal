@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { useEffect } from 'react'
 import type { AppSettings, Language } from '../../shared/settings.js'
 import { DEFAULT_SETTINGS } from '../../shared/settings.js'
-import { DEFAULT_SETTINGS_KEY } from '../../shared/constants.js'
+import { DEFAULT_SETTINGS_KEY, LEGACY_SETTINGS_KEY } from '../../shared/constants.js'
 import i18n from '../i18n/index.js'
 import { updateSearchHistory } from '../utils/terminal-search.js'
 import {
@@ -138,7 +138,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     try {
       const legacyThemeId = readLegacyThemeId()
       if (!storage?.get) { set({ isLoaded: true }); return }
-      const stored = await storage.get(DEFAULT_SETTINGS_KEY)
+      // Prefer chisa.* keys; fall back to legacy mux0.* once, then re-save to new key.
+      let stored = await storage.get(DEFAULT_SETTINGS_KEY)
+      let migratedFromLegacy = false
+      if (stored === undefined || stored === null) {
+        stored = await storage.get(LEGACY_SETTINGS_KEY)
+        if (stored !== undefined && stored !== null) migratedFromLegacy = true
+      }
       const sanitized = sanitizeSettings(stored)
       const hasStoredThemeId = 'themeId' in sanitized
       let merged = { ...DEFAULT_SETTINGS, ...sanitized }
@@ -158,7 +164,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       } catch {
         // ignore circular init races in tests
       }
-      if (!hasStoredThemeId && legacyThemeId) {
+      if (migratedFromLegacy || (!hasStoredThemeId && legacyThemeId)) {
         try {
           await storage.set(DEFAULT_SETTINGS_KEY, merged)
           clearLegacyThemeStorage()

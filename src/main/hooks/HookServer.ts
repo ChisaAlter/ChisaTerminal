@@ -5,14 +5,13 @@ import fs from 'node:fs'
 import { randomBytes } from 'node:crypto'
 import type { HookMessage, HookMessageInternal } from '../../shared/types.js'
 
-// Windows: \\.\pipe\mux0-hook-<pid>
-// Unix: /tmp/mux0-hook-<uid>.sock
+// Windows: \\.\pipe\chisa-hook-<pid>
+// Unix: /tmp/chisa-hook-<pid>.sock
 function getPipePath(): string {
   if (process.platform === 'win32') {
-    // Windows named pipe name (strip backslashes for pipe client lookup later)
-    return `\\\\.\\pipe\\mux0-hook-${process.pid}`
+    return `\\\\.\\pipe\\chisa-hook-${process.pid}`
   }
-  return path.join(os.tmpdir(), `mux0-hook-${process.pid}.sock`)
+  return path.join(os.tmpdir(), `chisa-hook-${process.pid}.sock`)
 }
 
 /** 单个连接的接收缓冲区上限（1MB），超过即视为异常并断开连接，防止内存 DoS。 */
@@ -108,7 +107,9 @@ export class HookServer {
             /* ignore */
           }
         }
-        // Expose pipe path via env so PtySession can read it and pass to children
+        // Expose pipe path via env so PtySession can read it and pass to children.
+        // Write both names during mux0→chisa migration.
+        process.env.CHISA_HOOK_PIPE = this.pipePath
         process.env.MUX0_HOOK_PIPE = this.pipePath
         if (!resolved) {
           resolved = true

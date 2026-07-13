@@ -13,6 +13,7 @@ export const IPC_CHANNELS = {
     MAXIMIZE: 'window:maximize',
     CLOSE: 'window:close',
     IS_MAXIMIZED: 'window:isMaximized',
+    MAXIMIZED_CHANGE: 'window:maximizedChange',
   },
   STORAGE: {
     GET: 'storage:get',
@@ -34,5 +35,18 @@ export const IPC_CHANNELS = {
 
 export const APP_NAME = 'ChisaTerminal'
 
-export const DEFAULT_SETTINGS_KEY = 'mux0.settings.v1'
-export const DEFAULT_WORKSPACES_KEY = 'mux0.workspaces.v2'
+/** Current storage keys (write path). */
+export const DEFAULT_SETTINGS_KEY = 'chisa.settings.v1'
+export const DEFAULT_WORKSPACES_KEY = 'chisa.workspaces.v2'
+
+/** Legacy mux0 keys (read fallback during migration). */
+export const LEGACY_SETTINGS_KEY = 'mux0.settings.v1'
+export const LEGACY_WORKSPACES_KEY = 'mux0.workspaces.v2'
+
+/** Keys the renderer may read/write via storage IPC. */
+export const ALLOWED_STORAGE_KEYS = new Set([
+  DEFAULT_SETTINGS_KEY,
+  DEFAULT_WORKSPACES_KEY,
+  LEGACY_SETTINGS_KEY,
+  LEGACY_WORKSPACES_KEY,
+])

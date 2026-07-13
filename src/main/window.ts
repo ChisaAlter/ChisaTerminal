@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, session } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { store } from './store.js'
-import { DEFAULT_SETTINGS_KEY, IPC_CHANNELS } from '../shared/constants.js'
+import { DEFAULT_SETTINGS_KEY, LEGACY_SETTINGS_KEY, IPC_CHANNELS } from '../shared/constants.js'
 import { DEFAULT_SETTINGS, type AppSettings } from '../shared/settings.js'
 import { ptyManager } from './pty-ipc.js'
 import { t } from './i18n.js'
@@ -17,7 +17,9 @@ export function setQuitting(quitting: boolean) {
 }
 
 function getSettings(): AppSettings {
-  const stored = store.get(DEFAULT_SETTINGS_KEY) as Partial<AppSettings> | undefined
+  const stored =
+    (store.get(DEFAULT_SETTINGS_KEY) as Partial<AppSettings> | undefined) ??
+    (store.get(LEGACY_SETTINGS_KEY) as Partial<AppSettings> | undefined)
   return { ...DEFAULT_SETTINGS, ...stored }
 }
 
@@ -61,11 +63,11 @@ function attachWindowHandlers(win: BrowserWindow) {
   })
 
   win.on('maximize', () => {
-    win.webContents.send('window:maximizedChange', true)
+    win.webContents.send(IPC_CHANNELS.WINDOW.MAXIMIZED_CHANGE, true)
   })
 
   win.on('unmaximize', () => {
-    win.webContents.send('window:maximizedChange', false)
+    win.webContents.send(IPC_CHANNELS.WINDOW.MAXIMIZED_CHANGE, false)
   })
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -105,7 +107,12 @@ export function createMainWindow(): BrowserWindow {
     return mainWindow
   }
 
-  const isDev = !app.isPackaged || process.env.MUX0_DEV === 'true'
+  const isDev =
+    !app.isPackaged ||
+    process.env.CHISA_DEV === 'true' ||
+    process.env.MUX0_DEV === 'true'
+  // Allow emergency rollback: CHISA_SANDBOX=0 disables sandbox if a preload edge case appears.
+  const sandboxEnabled = process.env.CHISA_SANDBOX !== '0'
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -129,7 +136,7 @@ export function createMainWindow(): BrowserWindow {
       preload: path.join(__dirname, '..', 'preload', 'preload', 'index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: sandboxEnabled,
       // 启用 <webview> 标签，用于右侧 BrowserSidecar 加载外部页面
       webviewTag: true,
     },

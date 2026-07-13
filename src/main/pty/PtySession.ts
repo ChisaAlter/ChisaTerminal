@@ -33,7 +33,8 @@ export class PtySession {
     this.id = id
 
     const homeDir = os.homedir()
-    const hookPipe = process.env.MUX0_HOOK_PIPE ?? ''
+    const hookPipe =
+      process.env.CHISA_HOOK_PIPE ?? process.env.MUX0_HOOK_PIPE ?? ''
 
     const ptyEnv: Record<string, string> = {
       PATH: process.env.PATH ?? '',
@@ -45,7 +46,10 @@ export class PtySession {
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
       COMSPEC: process.env.COMSPEC ?? '',
-      // Mux0 hook integration
+      // Hook integration (CHISA_* preferred; MUX0_* kept for profile compat)
+      CHISA_TERMINAL_ID: id,
+      CHISA_HOOK_PIPE: hookPipe,
+      CHISA_HOOK_TOKEN: hookServer.token,
       MUX0_TERMINAL_ID: id,
       MUX0_HOOK_PIPE: hookPipe,
       MUX0_HOOK_TOKEN: hookServer.token,

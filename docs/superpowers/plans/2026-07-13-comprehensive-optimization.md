@@ -93,12 +93,12 @@ Phase 2 安全+正确性 ───┼──► Phase 4 命名与打包精简 ─
 
 **目标:** 可追踪、可协作、磁盘干净；不改产品行为。
 
-### Task 0.1: 收紧 `.gitignore`
+### Task 0.1: 收紧 `.gitignore` ✅
 
 **Files:**
 - Modify: `.gitignore`
 
-- [ ] **Step 1:** 扩展忽略规则，至少覆盖：
+- [x] **Step 1:** 扩展忽略规则，至少覆盖：
 
 ```gitignore
 node_modules/
@@ -125,43 +125,33 @@ test-pixelate-*.cdp.mjs
 codex-candy-eval/**/run_*/
 ```
 
-- [ ] **Step 2:** 本地确认未跟踪的巨大目录不再误 `git add`（`git status` 干净于产物）
+- [x] **Step 2:** 本地确认未跟踪的巨大目录不再误 `git add`（`git status` 干净于产物）
 
-### Task 0.2: 清理磁盘产物（本地操作，不提交）
+### Task 0.2: 清理磁盘产物（本地操作，不提交） ✅
 
-- [ ] 删除或移出工作区：`dist-build*`、`release*`、异常目录 ``${env.ELECTRON_CACHE}``
-- [ ] 保留单一输出目录策略：仅 `dist/`（编译）+ `dist-build/`（安装包），写入 README
+- [x] 删除或移出工作区：`dist-build*`、`release*`、异常目录 ``${env.ELECTRON_CACHE}``
+- [x] 保留单一输出目录策略：仅 `dist/`（编译）+ `dist-build/`（安装包），写入 README
 
 **验收:** 工作区源码 + lockfile + 测试；无 GB 级构建目录被跟踪。
 
-### Task 0.3: README + LICENSE
+### Task 0.3: README + LICENSE ✅
 
 **Files:**
 - Create: `README.md`
 - Create: `LICENSE`（MIT，与 `package.json` 一致）
 
-- [ ] README 最少章节：
-  - 产品简介（终端 + 分屏 + 侧栏浏览器 + PowerShell Hook）
-  - 环境要求（Node ≥ 20，Windows 优先）
-  - `npm install` / `npm run dev` / `npm run build` / `npm test` / `npm run dist:win`
-  - 功能列表与截图位
-  - 安全说明摘要（contextIsolation、无 nodeIntegration、Hook token）
-  - 测试分层链接 `TESTING.md`
-- [ ] `package.json` 补 `author` 或 `repository` 字段（若有）
+- [x] README 最少章节（已覆盖简介/环境/命令/安全/结构）
+- [ ] `package.json` 补 `author` 或 `repository` 字段（若有）— 留待 Phase 4.4
 
-### Task 0.4: 首次 Git 基线提交
+### Task 0.4: 首次 Git 基线提交 ✅
 
-- [ ] 确认无密钥/大文件
-- [ ] 初始 commit 信息示例：
-
-```text
-chore: initial import of ChisaTerminal 1.0 baseline
-```
+- [x] 确认无密钥/大文件
+- [x] 初始 commit: `8c57a7d`（含 Phase 0 + Phase 2 修复）
 
 **Phase 0 验收:**
-- `git log -1` 有提交
-- README/LICENSE 存在
-- `npm test` 仍 73+ 通过（行为未变）
+- `git log -1` 有提交 ✅
+- README/LICENSE 存在 ✅
+- `npm test` 86 passed ✅
 
 ---
 
@@ -234,60 +224,33 @@ npm test
 
 **目标:** 修审查中的确定缺陷；补硬测。优先于功能开发。
 
-### Task 2.1: Browser 侧栏宽度持久化（确认 bug）
+### Task 2.1: Browser 侧栏宽度持久化（确认 bug） ✅
 
 **根因:** `useBrowserStore` 使用 `mux0.browserWidth.v1`，主进程 `ALLOWED_KEYS` 仅允许 settings/workspaces。
 
-**推荐方案 A（简单）:** 将宽度并入 `AppSettings`  
-**推荐方案 B:** 扩展 `ALLOWED_KEYS`
+**采纳: 方案 A** — 宽度并入 `AppSettings.browserSidecarWidth`。
 
-**采纳: 方案 A**（单一持久化面，少 key 扩散）
+- [x] 实现宽度变更 → `updateSetting('browserSidecarWidth', w)`（300ms debounce）
+- [x] 初始化从 settings 读取（loadSettings 同步到 browser store）
+- [x] 单测：`browser-width.test.ts` clamp 280–900 / non-finite
+- [ ] 手工：拖拽宽度 → 重启 → 宽度保持（待用户验收）
 
-**Files:**
-- Modify: `src/shared/settings.ts` — 增加 `browserSidecarWidth: number`，默认 `420`
-- Modify: `src/renderer/stores/useSettingsStore.ts` — sanitize 该字段
-- Modify: `src/renderer/stores/useBrowserStore.ts` — 读写 settings 或通过回调同步，删除独立 storage key
-- Modify: `src/shared/constants.ts` — 若有相关注释
-- Test: `src/renderer/stores/__tests__/useBrowserStore.test.ts`（新建）或 settings 测试
-
-- [ ] 实现宽度变更 → `updateSetting('browserSidecarWidth', w)`（debounce 可保留）
-- [ ] 初始化从 settings 读取
-- [ ] 单测：sanitize 非法宽度 clamp 到 280–900
-- [ ] 手工：拖拽宽度 → 重启 → 宽度保持
-
-### Task 2.2: PTY IPC 所有权校验
+### Task 2.2: PTY IPC 所有权校验 ✅
 
 **Files:**
+- Create: `src/main/pty/ptyOwnership.ts`
 - Modify: `src/main/pty-ipc.ts`
-- Create: `test/unit/pty-ipc-ownership.test.ts`（尽量可测地抽出纯函数，或 mock ipcMain）
+- Create: `test/unit/pty-ipc-ownership.test.ts`
 
-**行为约定:**
+- [x] `PTY.WRITE` / `RESIZE` / `CLOSE` 增加所有权检查
+- [x] 修正 `findWebContentsForTerminal` 使用 `webContents.fromId`（原先误用 `BrowserWindow.fromId`）
+- [x] 单测 7 条覆盖 track/untrack/clear
 
-```ts
-// 伪代码 — 实现时落地
-function assertOwnsTerminal(wc: WebContents, terminalId: string): boolean {
-  const set = wcToTerminals.get(wc.id)
-  return !!set?.has(terminalId)
-}
+### Task 2.3: 壁纸 URL 渲染安全 ✅
 
-// CREATE: 现有 trackTerminal 逻辑
-// WRITE / RESIZE / CLOSE: 若 !assertOwns 则 log warn 并 return
-// SESSION_COUNT: 可保持全局或改为仅当前 wc（建议保持全局只读）
-```
-
-- [ ] `PTY.WRITE` / `RESIZE` / `CLOSE` 增加所有权检查
-- [ ] `CREATE` 仍 track；重复 create 同一 id 的策略保持现有 dispose+rebuild
-- [ ] 单测覆盖：owner 可写；非 owner 不可写（通过导出测试钩子或轻量重构 `canAccessTerminal(wcId, id)`）
-
-### Task 2.3: 壁纸 URL 渲染安全
-
-**Files:**
-- Modify: `src/renderer/App.tsx`（`backgroundImage`）
-- Modify: `src/renderer/utils/wallpaper.ts` 或新建 `isSafeWallpaperUrl`
-
-- [ ] 仅允许 `chisa-wallpaper:` 协议（或 `data:image/` 若仍支持）
-- [ ] 禁止把未校验字符串直接拼进 `url('...')`；使用校验后的常量或 `CSS.escape`
-- [ ] 单测：恶意 `wallpaperUrl` 不进入 style
+- [x] `toSafeWallpaperCssUrl` 仅允许 `chisa-wallpaper:`
+- [x] App 使用安全 CSS 值
+- [x] 单测拒绝 http/file/注入字符
 
 ### Task 2.4: Hook token 暴露面收紧（增量）
 

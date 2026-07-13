@@ -1,5 +1,5 @@
 import { store } from './store.js'
-import { DEFAULT_SETTINGS_KEY } from '../shared/constants.js'
+import { DEFAULT_SETTINGS_KEY, LEGACY_SETTINGS_KEY } from '../shared/constants.js'
 import { DEFAULT_SETTINGS, type AppSettings, type Language } from '../shared/settings.js'
 
 const messages: Record<Language, Record<string, string>> = {
@@ -23,7 +23,9 @@ const messages: Record<Language, Record<string, string>> = {
 
 function getLanguage(): Language {
   try {
-    const stored = store.get(DEFAULT_SETTINGS_KEY) as Partial<AppSettings> | undefined
+    const stored =
+      (store.get(DEFAULT_SETTINGS_KEY) as Partial<AppSettings> | undefined) ??
+      (store.get(LEGACY_SETTINGS_KEY) as Partial<AppSettings> | undefined)
     return (stored?.language ?? DEFAULT_SETTINGS.language) as Language
   } catch {
     return DEFAULT_SETTINGS.language

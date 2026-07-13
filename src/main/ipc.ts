@@ -2,10 +2,16 @@ import { app, ipcMain, protocol } from 'electron'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { IPC_CHANNELS, DEFAULT_SETTINGS_KEY, DEFAULT_WORKSPACES_KEY } from '../shared/constants.js'
+import {
+  IPC_CHANNELS,
+  ALLOWED_STORAGE_KEYS,
+  DEFAULT_SETTINGS_KEY,
+  DEFAULT_WORKSPACES_KEY,
+} from '../shared/constants.js'
 import { store } from './store.js'
 
-const ALLOWED_KEYS = new Set([DEFAULT_SETTINGS_KEY, DEFAULT_WORKSPACES_KEY])
+// Only current keys may be written; legacy keys remain readable for migration.
+const WRITE_KEYS = new Set([DEFAULT_SETTINGS_KEY, DEFAULT_WORKSPACES_KEY])
 const MAX_VALUE_SIZE = 10 * 1024 * 1024
 const WALLPAPER_DIR_NAME = 'wallpapers'
 const WALLPAPER_MIME_WHITELIST = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
@@ -62,7 +68,7 @@ app.whenReady().then(() => {
 
 ipcMain.handle(IPC_CHANNELS.STORAGE.GET, (_event, key: string) => {
   try {
-    if (typeof key !== 'string' || !ALLOWED_KEYS.has(key)) {
+    if (typeof key !== 'string' || !ALLOWED_STORAGE_KEYS.has(key)) {
       console.warn(`[Storage] Rejected get for key: ${key}`)
       return undefined
     }
@@ -75,7 +81,7 @@ ipcMain.handle(IPC_CHANNELS.STORAGE.GET, (_event, key: string) => {
 
 ipcMain.handle(IPC_CHANNELS.STORAGE.SET, (_event, key: string, value: unknown) => {
   try {
-    if (typeof key !== 'string' || !ALLOWED_KEYS.has(key)) {
+    if (typeof key !== 'string' || !WRITE_KEYS.has(key)) {
       console.warn(`[Storage] Rejected set for key: ${key}`)
       return
     }

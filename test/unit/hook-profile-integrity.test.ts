@@ -30,6 +30,16 @@ describe('hookProfileIntegrity', () => {
     expect(shouldLoadHookProfile(content)).toBe(true)
   })
 
+  it('matches after CRLF conversion (Windows checkout)', () => {
+    const content = fs.readFileSync(HOOK_PATH)
+    const asCrlf = Buffer.from(
+      content.toString('utf8').replace(/\n/g, '\r\n'),
+      'utf8'
+    )
+    expect(hashHookProfile(asCrlf)).toBe(EXPECTED_HOOK_PROFILE_SHA256)
+    expect(shouldLoadHookProfile(asCrlf)).toBe(true)
+  })
+
   it('fails closed when content is tampered', () => {
     const content = fs.readFileSync(HOOK_PATH)
     const tampered = Buffer.concat([content, Buffer.from('\n# tampered\n')])

@@ -1,0 +1,9 @@
+# Keep text as LF so Windows checkouts match the pinned hook-profile SHA-256
+# and do not silently fail-closed at runtime.
+* text=auto eol=lf
+*.ps1 text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary

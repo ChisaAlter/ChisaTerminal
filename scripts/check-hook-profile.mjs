@@ -24,8 +24,13 @@ if (!match) {
 }
 const expected = match[1]
 
+// Normalize CRLF → LF so Windows checkouts match the pinned LF digest.
 const profile = readFileSync(path.join(root, 'hooks', 'powershell-hook.ps1'))
-const actual = createHash('sha256').update(profile).digest('hex')
+const normalized = Buffer.from(
+  profile.toString('utf8').replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
+  'utf8'
+)
+const actual = createHash('sha256').update(normalized).digest('hex')
 
 if (actual !== expected) {
   console.error('[check-hook-profile] SHA-256 mismatch!')

@@ -15,10 +15,13 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Hook profile integrity (SHA-256)
+        run: node scripts/check-hook-profile.mjs
       - name: Typecheck
         run: npm run typecheck
       - name: Unit & integration tests
         run: npm test
       - name: Lint
         run: npm run lint
-        continue-on-error: true
+      - name: Build
+        run: npm run build

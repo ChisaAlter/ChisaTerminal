@@ -16,7 +16,6 @@
 - Node.js >= 20（推荐 22+，E2E 依赖原生 `WebSocket`）
 - npm
 - 运行 E2E 前需要先执行 `npm run build` 构建主进程与渲染进程
-- 运行 SSH 集成测试前需要安装 Docker 并执行 `npm run test:sshd-up`
 
 ## 运行测试
 
@@ -71,8 +70,10 @@ npm run test
 ### CI 门禁（本地等价）
 
 ```bash
-npm run test:ci   # typecheck + unit/integration
-npm run lint      # ESLint（warn 为主，不阻塞历史债）
+node scripts/check-hook-profile.mjs   # hook profile SHA-256 完整性
+npm run test:ci                       # typecheck + unit/integration
+npm run lint                          # ESLint（--max-warnings 0，warning 也会阻塞）
+npm run build                         # renderer + main + preload
 ```
 
 ## 测试基础设施
@@ -85,49 +86,6 @@ npm run lint      # ESLint（warn 为主，不阻塞历史债）
 - 覆盖 `XDG_CONFIG_HOME`、`LOCALAPPDATA`、`APPDATA` 等环境变量。
 - 确保 `electron-store` 的配置文件不会污染开发环境。
 - 测试结束后自动清理临时目录。
-
-### safeStorage Mock
-
-`test/helpers/safeStorage-mock.ts` 提供 Electron `safeStorage` 的可控 mock：
-
-```ts
-import { SafeStorageMock } from '../helpers/safeStorage-mock.js'
-
-const mock = new SafeStorageMock()
-mock.isEncryptionAvailable() // true
-mock.encryptString('hello')  // Buffer
-mock.decryptString(buf)      // 'hello'
-
-// 模拟加密失败
-mock.configure({ encryptError: new Error('加密失败') })
-
-// 模拟加密不可用
-mock.configure({ available: false })
-```
-
-## 测试 fixtures
-
-`test/fixtures/` 目录包含：
-
-- `Solarized.itermcolors`：有效的 iTerm2 主题文件。
-- `Monokai.tmTheme`：有效的 TextMate 主题文件。
-- `test-image-small.png`：约 17KB 的测试图片。
-- `test-image-large.png`：约 5.9MB 的测试图片。
-- `docker-compose-sshd.yml`：基于 `linuxserver/openssh-server` 的测试 SSH 服务器。
-- `sshd-set-root.sh`：自定义初始化脚本，设置 root 密码为 `testpass` 并允许 root 密码登录。
-
-### 启动测试 SSH 服务器
-
-```bash
-npm run test:sshd-up
-```
-
-服务将暴露在本地 `2222` 端口，可使用以下信息连接：
-
-- 主机：`127.0.0.1`
-- 端口：`2222`
-- 用户名：`root`
-- 密码：`testpass`
 
 ## 编写新测试
 

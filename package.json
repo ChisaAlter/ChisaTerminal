@@ -2,6 +2,10 @@
   "name": "chisa-terminal",
   "version": "1.1.0",
   "description": "ChisaTerminal - 一个现代化的终端模拟器",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChisaAlter/ChisaTerminal.git"
+  },
   "main": "dist/main/main/index.js",
   "type": "module",
   "engines": {
@@ -21,15 +25,14 @@
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
     "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.preload.json --noEmit && tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src test scripts",
+    "lint": "eslint src test scripts --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --project=unit",
     "test:integration": "vitest run --project=integration --passWithNoTests",
     "test:ci": "npm run typecheck && npm test",
     "test:e2e": "tsx test/e2e/run-e2e.ts",
-    "test:ai-smoke": "tsx test/e2e/run-ai-smoke.ts",
-    "test:sshd-up": "docker compose -f test/fixtures/docker-compose-sshd.yml up -d"
+    "test:ai-smoke": "tsx test/e2e/run-ai-smoke.ts"
   },
   "keywords": [
     "terminal",

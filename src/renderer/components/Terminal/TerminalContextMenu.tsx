@@ -25,6 +25,17 @@ interface MenuItemProps {
   separator?: boolean
 }
 
+function MenuHeader({ label }: { label: string }) {
+  return (
+    <div
+      role="presentation"
+      className="px-4 py-1 text-xs text-text-secondary select-none cursor-default"
+    >
+      {label}
+    </div>
+  )
+}
+
 function MenuItem({ label, onClick, disabled = false, separator = false }: MenuItemProps) {
   if (separator) {
     return <div role="separator" className="h-px bg-border my-1" />
@@ -192,7 +203,7 @@ export default function TerminalContextMenu({
       {quickActions.length > 0 && onRunQuickAction && (
         <>
           <MenuItem label="" separator />
-          <MenuItem label={t('context_menu.quick_actions')} disabled />
+          <MenuHeader label={t('context_menu.quick_actions')} />
           {quickActions.map((action) => (
             <MenuItem
               key={action.id}

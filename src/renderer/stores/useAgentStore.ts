@@ -16,18 +16,11 @@ export interface TerminalHookState {
 export interface AgentState {
   // 全局展示用（聚焦终端的派生状态）
   status: AgentStatus
-  currentTask: string | null
-  progress: number
-  statusText: string
   // 每个 terminal 的细粒度状态
   terminalStates: Record<string, TerminalHookState>
   // 当前聚焦的 terminalId（由 App 设置，用于派生全局展示）
   focusedTerminalId: string | null
 
-  setStatus: (status: AgentStatus) => void
-  setCurrentTask: (task: string | null) => void
-  setProgress: (progress: number) => void
-  setStatusText: (text: string) => void
   setFocusedTerminalId: (id: string | null) => void
   updateFromHook: (msg: HookMessage) => void
   removeTerminalState: (terminalId: string) => void
@@ -54,20 +47,13 @@ function eventToStatus(event: HookMessage['event']): AgentStatus {
 
 export const useAgentStore = create<AgentState>((set, get) => ({
   status: 'idle',
-  currentTask: null,
-  progress: 0,
-  statusText: '',
   terminalStates: {},
   focusedTerminalId: null,
 
-  setStatus: (status) => set({ status }),
-  setCurrentTask: (task) => set({ currentTask: task }),
-  setProgress: (progress) => set({ progress }),
-  setStatusText: (text) => set({ statusText: text }),
   setFocusedTerminalId: (id) => {
     // 合并为单次 set，避免先 set focusedTerminalId 再 set derived 触发两次订阅
     const t = id ? get().terminalStates[id] : undefined
-    set({ focusedTerminalId: id, ...deriveFromTerminal(t, t?.command ?? null) })
+    set({ focusedTerminalId: id, ...deriveFromTerminal(t) })
   },
 
   updateFromHook: (msg) => {
@@ -86,7 +72,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     const focusedId = get().focusedTerminalId
     let patch: Partial<AgentState> = { terminalStates }
     if (focusedId === msg.terminalId) {
-      patch = { ...patch, ...deriveFromTerminal(next, msg.command ?? null) }
+      patch = { ...patch, ...deriveFromTerminal(next) }
     }
     set(patch)
   },
@@ -99,7 +85,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       // 若移除的是当前聚焦 terminal，清空聚焦并重置全局派生状态
       if (state.focusedTerminalId === terminalId) {
         patch.focusedTerminalId = null
-        Object.assign(patch, deriveFromTerminal(undefined, null))
+        Object.assign(patch, deriveFromTerminal(undefined))
       }
       return patch
     })
@@ -108,26 +94,12 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   reset: () =>
     set({
       status: 'idle',
-      currentTask: null,
-      progress: 0,
-      statusText: '',
       terminalStates: {},
       focusedTerminalId: null,
     }),
 }))
 
 // 从 terminal 状态派生全局展示字段
-function deriveFromTerminal(
-  t: TerminalHookState | undefined,
-  command: string | null
-): Partial<AgentState> {
-  if (!t) {
-    return { status: 'idle', currentTask: null, statusText: '', progress: 0 }
-  }
-  return {
-    status: t.status,
-    currentTask: command ?? null,
-    statusText: '',
-    progress: 0,
-  }
+function deriveFromTerminal(t: TerminalHookState | undefined): Partial<AgentState> {
+  return { status: t?.status ?? 'idle' }
 }

@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import i18n from '../i18n/index.js'
 
 interface Props {
   children: ReactNode
@@ -30,13 +31,13 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback ?? (
           <div className="p-4 text-red-500 text-sm">
-            <div>组件加载失败，请重载窗口</div>
+            <div>{i18n.t('common.load_error')}</div>
             <button
               type="button"
               onClick={this.reset}
               className="mt-2 px-3 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700"
             >
-              重试
+              {i18n.t('common.retry')}
             </button>
           </div>
         )

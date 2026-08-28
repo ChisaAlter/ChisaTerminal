@@ -4,6 +4,7 @@ import type { Workspace, TerminalTab, SplitNode, SplitDirection } from '@shared/
 import { DEFAULT_WORKSPACES_KEY, LEGACY_WORKSPACES_KEY } from '../../shared/constants.js'
 import { useAgentStore } from './useAgentStore.js'
 import { useBrowserStore } from './useBrowserStore.js'
+import { reportPersistError } from './useSettingsStore.js'
 
 const storage = typeof window !== 'undefined' ? window.electronAPI?.storage : undefined
 
@@ -693,9 +694,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         state.workspaces,
         state.selectedWorkspaceId
       )
-      await storage?.set?.(DEFAULT_WORKSPACES_KEY, data)
+      const result = await storage?.set?.(DEFAULT_WORKSPACES_KEY, data)
+      if (result && result.ok === false) {
+        reportPersistError()
+      }
     } catch {
-      // ignore persistence errors
+      reportPersistError()
     }
   },
 }))

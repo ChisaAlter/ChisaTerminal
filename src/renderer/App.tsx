@@ -41,6 +41,8 @@ export default function App() {
 
   const settings = useSettingsStore((s) => s.settings)
   const updateSetting = useSettingsStore((s) => s.updateSetting)
+  const persistError = useSettingsStore((s) => s.persistError)
+  const clearPersistError = useSettingsStore((s) => s.clearPersistError)
 
   const selectedWorkspace = workspaces.find((w) => w.id === selectedWorkspaceId)
   const selectedTab = selectedWorkspace?.tabs.find(
@@ -248,13 +250,8 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showSettings || showCommandPalette) {
-        // 模态打开时仅放行 Escape，其余快捷键全部短路
-        if (e.key === 'Escape') return
-        // Ctrl/Cmd 组合键短路
-        if (e.ctrlKey || e.metaKey) return
-        return
-      }
+      // 模态打开时不处理任何全局快捷键（Escape 关闭由模态组件自身监听）
+      if (showSettings || showCommandPalette) return
       if (e.defaultPrevented) return
       const target = e.target as HTMLElement
       const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
@@ -435,6 +432,22 @@ export default function App() {
             />
           </Suspense>
         </ErrorBoundary>
+      )}
+      {persistError && (
+        <div
+          role="alert"
+          className="fixed bottom-4 right-4 z-[60] flex items-center gap-3 rounded-md border border-red-500/40 bg-canvas px-4 py-2 text-sm text-red-400 shadow-lg"
+        >
+          <span>{t('toast.persist_failed')}</span>
+          <button
+            type="button"
+            onClick={clearPersistError}
+            aria-label={t('toast.dismiss')}
+            className="rounded px-2 py-0.5 text-xs text-text-secondary hover:bg-border hover:text-foreground transition-colors"
+          >
+            {t('toast.dismiss')}
+          </button>
+        </div>
       )}
     </div>
   )

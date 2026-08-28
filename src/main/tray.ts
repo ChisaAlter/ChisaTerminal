@@ -1,5 +1,6 @@
 import { Tray, Menu, nativeImage, app } from 'electron'
 import { toggleMainWindow, setQuitting } from './window.js'
+import { t } from './i18n.js'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -22,12 +23,12 @@ export function createTray(): Tray {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '显示/隐藏窗口',
+      label: t('tray.toggle_window'),
       click: () => toggleMainWindow(),
     },
     { type: 'separator' },
     {
-      label: '退出',
+      label: t('tray.quit'),
       click: () => {
         setQuitting(true)
         app.quit()

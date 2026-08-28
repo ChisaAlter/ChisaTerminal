@@ -8,10 +8,14 @@ function shortCwd(path: string): string {
   return '.../' + parts.slice(-2).join('/')
 }
 
+// Hook 状态上报目前仅由 Windows PowerShell profile 实现（见 docs/platform-hooks.md）。
+// 其他平台不展示永远不会更新的“就绪”假状态，而是明确提示 Hook 不可用。
+const hooksSupported =
+  typeof window !== 'undefined' && window.electronAPI?.platform === 'win32'
+
 function AgentStatusBar() {
   const { t } = useTranslation()
   const status = useAgentStore((s) => s.status)
-  const statusText = useAgentStore((s) => s.statusText)
   const focusedTerminalId = useAgentStore((s) => s.focusedTerminalId)
   const terminalState = useAgentStore((s) =>
     focusedTerminalId ? s.terminalStates[focusedTerminalId] : undefined
@@ -26,8 +30,12 @@ function AgentStatusBar() {
     working: { color: 'bg-blue-500', label: t('agent.status.working') },
     error: { color: 'bg-red-500', label: t('agent.status.error') },
   }
+  // hasHookData: 该终端已收到过 hook 上报（如非 Windows 端未来接入时仍能正确展示）
+  const hasHookData = terminalState !== undefined
   const config = statusConfig[status]
-  const label = statusText || config.label
+  const unavailable = !hooksSupported && !hasHookData
+  const dotColor = unavailable ? 'bg-border-strong' : config.color
+  const label = unavailable ? t('agent.hooks_unavailable') : config.label
 
   return (
     <div
@@ -39,12 +47,12 @@ function AgentStatusBar() {
       aria-label={t('agent.status_bar_label', { status: label })}
     >
       <div
-        className={`w-2 h-2 rounded-full shrink-0 ${config.color} ${
-          status === 'thinking' || status === 'working' ? 'animate-pulse' : ''
+        className={`w-2 h-2 rounded-full shrink-0 ${dotColor} ${
+          !unavailable && (status === 'thinking' || status === 'working') ? 'animate-pulse' : ''
         }`}
         data-testid="agent-status-dot"
       />
-      <span data-testid="agent-status-label" className="shrink-0">
+      <span data-testid="agent-status-label" className="truncate max-w-[240px]" title={label}>
         {label}
       </span>
       {cwd && (

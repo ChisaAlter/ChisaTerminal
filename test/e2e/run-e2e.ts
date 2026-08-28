@@ -66,8 +66,8 @@ async function runAgentStatusScenario(client: CDPClient): Promise<void> {
     client,
     `document.querySelector('[data-testid="agent-status-label"]')?.textContent?.trim() ?? ''`
   )
-  // zh-CN default or en
-  if (!/就绪|等待输入|运行中|错误|Ready|Waiting|Working|Error/i.test(label)) {
+  // zh-CN default or en; 非 Windows 平台显示 Hook 不可用提示
+  if (!/就绪|等待输入|运行中|错误|Hook 不可用|Ready|Waiting|Working|Error|Hooks unavailable/i.test(label)) {
     throw new Error(`Agent 状态文案异常: “${label}”`)
   }
   console.log(`[e2e] agent status=${status} label=${label}`)

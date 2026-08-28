@@ -6,7 +6,8 @@ import { useQuickActionsStore } from '../../stores/useQuickActionsStore.js'
 import { DEFAULT_SETTINGS, type AppSettings, type Language } from '../../../shared/settings.js'
 import { readFileAsBase64, pixelateImage, compressImage, getBase64Size, saveWallpaperToUserData, ensureDataUrl, MAX_WALLPAPER_SIZE } from '../../utils/wallpaper.js'
 
-const APP_VERSION = '1.1.0'
+// Injected at build time from package.json — keeps About in sync with the release version
+const APP_VERSION = __APP_VERSION__
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -53,6 +54,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     { key: 'Ctrl+D', description: t('shortcuts.split_vertical') },
     { key: 'Ctrl+Shift+D', description: t('shortcuts.split_horizontal') },
     { key: 'Ctrl+Shift+P', description: t('shortcuts.command_palette') },
+    { key: 'Ctrl+Shift+F', description: t('shortcuts.search') },
+    { key: 'Ctrl+,', description: t('shortcuts.open_settings') },
+    { key: 'Ctrl+= / Ctrl+-', description: t('shortcuts.zoom') },
+    { key: 'Ctrl+0', description: t('shortcuts.zoom_reset') },
     { key: 'Ctrl+`', description: t('shortcuts.global_toggle'), global: true },
   ], [t])
 
@@ -585,7 +590,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       data-testid="settings-modal-overlay"
       onClick={onClose}
     >
@@ -597,13 +602,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         aria-labelledby="settings-modal-title"
         data-testid="settings-modal"
         tabIndex={-1}
-        className="relative w-full max-w-3xl h-[500px] bg-canvas border border-border rounded-lg shadow-2xl overflow-hidden flex outline-none wallpaper-glass"
+        className="relative w-full max-w-3xl h-[500px] max-h-full bg-canvas border border-border rounded-lg shadow-2xl overflow-hidden flex outline-none wallpaper-glass"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="settings-modal-title" className="sr-only">
           {t('settings.title')}
         </h2>
-        <div className="w-48 border-r border-border bg-sidebar/50 p-2 flex flex-col">
+        <div className="w-48 shrink-0 border-r border-border bg-sidebar/50 p-2 flex flex-col overflow-y-auto">
           {categories.map((category) => (
             <button
               key={category.id}

@@ -10,6 +10,8 @@ const messages: Record<Language, Record<string, string>> = {
     'dialog.exit.quit': '退出',
     'dialog.hook.title': 'Hook 服务警告',
     'dialog.hook.message': 'Hook 服务启动失败，Agent 钩子功能将不可用。',
+    'tray.toggle_window': '显示/隐藏窗口',
+    'tray.quit': '退出',
   },
   'en': {
     'dialog.exit.title': 'Confirm Exit',
@@ -18,6 +20,8 @@ const messages: Record<Language, Record<string, string>> = {
     'dialog.exit.quit': 'Quit',
     'dialog.hook.title': 'Hook Server Warning',
     'dialog.hook.message': 'Failed to start hook server. Agent hooks will be unavailable.',
+    'tray.toggle_window': 'Show/Hide Window',
+    'tray.quit': 'Quit',
   },
 }
 

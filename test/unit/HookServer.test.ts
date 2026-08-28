@@ -219,4 +219,51 @@ describe('HookServer robustness', () => {
 
     client.destroy()
   })
+
+  it('reassembles a multibyte UTF-8 character split across TCP writes', async () => {
+    await startServer(server)
+    const onMessage = vi.fn()
+    server.onMessage = onMessage
+
+    const client = await connectClient(pipePath)
+    client.on('error', () => {})
+
+    const cwd = 'C:\\用户\\项目目录'
+    const payload = Buffer.from(
+      JSON.stringify({
+        terminalId: 'term-utf8',
+        event: 'idle' as const,
+        agent: 'powershell',
+        at: Date.now(),
+        cwd,
+        token: server.token,
+      }) + '\n',
+      'utf8'
+    )
+
+    // 找到 payload 中第一个多字节字符，并在其字节序列中间切开
+    let splitAt = -1
+    for (let i = 0; i < payload.length; i++) {
+      const byte = payload[i]!
+      // 0xE0-0xEF 是 3 字节 UTF-8 序列首字节（涵盖 CJK）；在首字节后 1 字节处切
+      if (byte >= 0xe0 && byte <= 0xef) {
+        splitAt = i + 1
+        break
+      }
+    }
+    expect(splitAt).toBeGreaterThan(0)
+
+    client.write(payload.subarray(0, splitAt))
+    await waitFor(20)
+    client.write(payload.subarray(splitAt))
+
+    await vi.waitFor(() => {
+      expect(onMessage).toHaveBeenCalledTimes(1)
+    })
+    const forwarded = onMessage.mock.calls[0][0]
+    expect(forwarded.terminalId).toBe('term-utf8')
+    expect(forwarded.cwd).toBe(cwd)
+
+    client.destroy()
+  })
 })

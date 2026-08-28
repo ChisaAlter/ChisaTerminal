@@ -200,9 +200,16 @@ export function createMainWindow(): BrowserWindow {
     })
   })
 
-  // browser-sidecar partition：剥离响应头中的 X-Frame-Options 和 CSP 的 frame-ancestors
-  // 指令，使 webview 能加载带这些头的外部页面（webview 自身已通过 sandbox / nodeIntegration=false 隔离）。
+  // browser-sidecar partition：仅对顶层文档（mainFrame）剥离响应头中的 X-Frame-Options
+  // 和 CSP 的 frame-ancestors 指令，使 webview 能加载带这些头的外部页面
+  // （webview 自身已通过 sandbox / nodeIntegration=false 隔离）。
+  // 子 iframe 的响应头保持原样，不削弱页面自身的防点击劫持能力。
+  // 详见 README「安全模型」一节。
   session.fromPartition('browser-sidecar').webRequest.onHeadersReceived((details, callback) => {
+    if (details.resourceType !== 'mainFrame') {
+      callback({ responseHeaders: details.responseHeaders })
+      return
+    }
     const sourceHeaders = details.responseHeaders ?? {}
     const headers: Record<string, string[]> = {}
     for (const [key, value] of Object.entries(sourceHeaders)) {
@@ -233,6 +240,11 @@ export function createMainWindow(): BrowserWindow {
       console.warn('[Window] Blocked unsafe <webview>: nodeIntegration/disableWebSecurity requested')
       return
     }
+    // 剥离任何 preload 脚本请求：sidecar webview 不允许注入本地脚本，
+    // 防止被劫持的渲染进程借 <webview preload> 在 guest 页面执行特权代码。
+    delete webPreferences.preload
+    delete (webPreferences as { preloadURL?: string }).preloadURL
+    delete (params as { preload?: string }).preload
     webPreferences.nodeIntegration = false
     webPreferences.webSecurity = true
     webPreferences.sandbox = true

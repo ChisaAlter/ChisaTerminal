@@ -67,11 +67,23 @@ if (!gotTheLock) {
     unregisterGlobalShortcut()
   })
 
-  app.on('will-quit', () => {
+  let hookServerStopped = false
+  app.on('will-quit', (event) => {
     unregisterGlobalShortcut()
     ptyManager.closeAll()
-    hookServer.stop()
     destroyTray()
+    // 等待 hook server 完全关闭（删除 unix socket 文件等）后再退出，
+    // 通过 preventDefault + 二次 quit 实现，避免退出竞态泄漏 socket 文件
+    if (!hookServerStopped) {
+      event.preventDefault()
+      hookServer
+        .stop()
+        .catch((err) => console.warn('[Main] hookServer.stop failed:', err))
+        .finally(() => {
+          hookServerStopped = true
+          app.quit()
+        })
+    }
   })
 
   app.on('window-all-closed', () => {

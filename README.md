@@ -62,8 +62,9 @@ npm run build && npm run test:ai-smoke
 - Preload 仅暴露白名单 `electronAPI`
 - 存储 key 白名单；设置/工作区使用 `chisa.*`（读时兼容旧 `mux0.*`）
 - 壁纸 MIME/大小限制与自定义协议 `chisa-wallpaper://`；渲染前校验协议
-- Webview：挂载时强制 sandbox，禁止非 http(s) src
-- PTY write/resize/close：校验调用方是否拥有该 `terminalId`
+- Webview：挂载时强制 sandbox、剥离任何 preload 请求，禁止非 http(s) src
+- 浏览器侧栏（`browser-sidecar` partition）：**仅对顶层文档**剥离 `X-Frame-Options` / CSP `frame-ancestors` 响应头，使外部页面能在 webview 中加载；子 iframe 的响应头保持原样，不削弱页面自身的防点击劫持能力。该 partition 只被侧栏 webview 使用，不影响主窗口会话
+- PTY create/write/resize/close：校验调用方是否拥有该 `terminalId`（create 拒绝抢占其他窗口已持有的 id）
 - Hook：会话随机 token + event 白名单；profile 文件 SHA-256 完整性校验
 
 ### Hook token 威胁模型

@@ -47,9 +47,9 @@ describe('escapeShellArg', () => {
     expect(escapeShellArg('/path/with spaces', 'unix')).toBe(
       '"/path/with spaces"'
     )
-    // On Windows backslashes must NOT be doubled
+    // Windows uses PowerShell single quotes; backslashes stay literal
     expect(escapeShellArg('C:\\Users\\My Name', 'win32')).toBe(
-      '"C:\\Users\\My Name"'
+      "'C:\\Users\\My Name'"
     )
     // Unix doubles backslashes inside quoted strings
     expect(escapeShellArg('C:\\Users\\My Name', 'unix')).toBe(
@@ -57,21 +57,41 @@ describe('escapeShellArg', () => {
     )
   })
 
-  it('escapes double quotes', () => {
-    expect(escapeShellArg('say "hello"', 'win32')).toBe('"say \\"hello\\""')
+  it('escapes quotes', () => {
+    // PowerShell single-quoted strings keep double quotes literal
+    expect(escapeShellArg('say "hello"', 'win32')).toBe('\'say "hello"\'')
     expect(escapeShellArg('say "hello"', 'unix')).toBe('"say \\"hello\\""')
+    // Embedded single quotes are doubled per PowerShell quoting rules
+    expect(escapeShellArg("it's here", 'win32')).toBe("'it''s here'")
   })
 
-  it('escapes backticks and dollar signs on unix only', () => {
-    expect(escapeShellArg('echo `whoami`', 'win32')).toBe('"echo `whoami`"')
+  it('neutralizes PowerShell interpolation metacharacters on win32', () => {
+    // Backticks and $ must not be interpolatable: single quotes keep them literal
+    expect(escapeShellArg('echo `whoami`', 'win32')).toBe("'echo `whoami`'")
+    expect(escapeShellArg('echo $HOME', 'win32')).toBe("'echo $HOME'")
+    expect(escapeShellArg('$(Get-Process)', 'win32')).toBe("'$(Get-Process)'")
+    expect(escapeShellArg('`n$(calc)', 'win32')).toBe("'`n$(calc)'")
+  })
+
+  it('escapes backticks and dollar signs on unix', () => {
     expect(escapeShellArg('echo `whoami`', 'unix')).toBe('"echo \\`whoami\\`"')
-    expect(escapeShellArg('echo $HOME', 'win32')).toBe('"echo $HOME"')
     expect(escapeShellArg('echo $HOME', 'unix')).toBe('"echo \\$HOME"')
+    expect(escapeShellArg('$(id)', 'unix')).toBe('"\\$(id)"')
   })
 
-  it('escapes percent signs on Windows', () => {
-    expect(escapeShellArg('50%', 'win32')).toBe('"50%%"')
-    expect(escapeShellArg('100% done', 'win32')).toBe('"100%% done"')
+  it('cannot break out of quoting via crafted injection payloads', () => {
+    // win32: attacker tries to close the single quote and run a command
+    const winPayload = "'; calc; '"
+    const winEscaped = escapeShellArg(winPayload, 'win32')
+    expect(winEscaped).toBe("'''; calc; '''")
+    // every single quote inside is doubled → remains one literal string
+    expect(winEscaped.slice(1, -1).replace(/''/g, '')).not.toContain("'")
+
+    // unix: $(...) and backticks are backslash-escaped, quotes cannot close early
+    const unixPayload = '"; $(rm -rf /); `reboot`'
+    expect(escapeShellArg(unixPayload, 'unix')).toBe(
+      '"\\"; \\$(rm -rf /); \\`reboot\\`"'
+    )
   })
 })
 

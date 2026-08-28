@@ -119,7 +119,18 @@ export class CDPClient {
         resolve()
         return
       }
-      this.ws.addEventListener('close', () => resolve(), { once: true })
+      // Electron 的 CDP 端点在部分（headless）环境不会回应 close 握手，
+      // 'close' 事件永不触发会导致 e2e 挂起，超时后直接放行
+      const timer = setTimeout(() => resolve(), 2000)
+      timer.unref?.()
+      this.ws.addEventListener(
+        'close',
+        () => {
+          clearTimeout(timer)
+          resolve()
+        },
+        { once: true }
+      )
       this.ws.close()
     })
   }
@@ -239,15 +250,18 @@ export function launchElectron(options: ElectronLaunchOptions = {}): ChildProces
 
 export async function stopElectron(proc: ChildProcess): Promise<void> {
   return new Promise((resolve) => {
-    if (proc.killed || proc.exitCode !== null) {
+    if (proc.exitCode !== null) {
       resolve()
       return
     }
     proc.on('exit', () => resolve())
     proc.kill('SIGTERM')
-    setTimeout(() => {
-      if (!proc.killed) proc.kill('SIGKILL')
+    // proc.killed 在发送 SIGTERM 后即为 true（无论进程是否真正退出），
+    // 必须用 exitCode 判断存活，否则 SIGKILL 兜底永远不会触发导致 e2e 挂起
+    const killTimer = setTimeout(() => {
+      if (proc.exitCode === null) proc.kill('SIGKILL')
     }, 5000)
+    killTimer.unref?.()
   })
 }
 

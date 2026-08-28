@@ -2,6 +2,12 @@ import { memo, useState, useRef, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TerminalTab } from '@shared/types'
 import AgentStatusBar from '../Agent/AgentStatusBar.js'
+import WindowControls, { showWindowControls } from './WindowControls.js'
+
+// Windows 使用原生 titleBarOverlay 按钮（宽约 140px），需在右侧预留空间；
+// 其他平台不预留，避免出现无意义的空白区域
+const isWindows =
+  typeof window !== 'undefined' && window.electronAPI?.platform === 'win32'
 
 interface TabBarProps {
   tabs: TerminalTab[]
@@ -83,7 +89,9 @@ function TabBar({
 
   return (
     <div
-      className="h-9 shrink-0 flex items-center bg-sidebar border-b border-border px-2 gap-1 wallpaper-glass drag-region pr-[140px]"
+      className={`h-9 shrink-0 flex items-center bg-sidebar border-b border-border pl-2 gap-1 wallpaper-glass drag-region ${
+        isWindows ? 'pr-[140px]' : showWindowControls ? 'pr-0' : 'pr-2'
+      }`}
       data-testid="tab-bar"
     >
       <div
@@ -153,6 +161,7 @@ function TabBar({
       </button>
 
       <AgentStatusBar />
+      {showWindowControls && <WindowControls />}
     </div>
   )
 }

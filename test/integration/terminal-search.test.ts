@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { Terminal } from '@xterm/xterm'
 import { SearchAddon } from '@xterm/addon-search'
 import {
-  createSearchAddon,
   findNext,
   findPrevious,
-  toXtermSearchOptions,
 } from '../../src/renderer/utils/terminal-search.js'
 
 function createTestTerminal(cols = 80, rows = 24) {

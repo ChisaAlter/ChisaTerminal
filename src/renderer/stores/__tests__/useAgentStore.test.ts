@@ -20,7 +20,7 @@ describe('useAgentStore', () => {
     store.setFocusedTerminalId('t1')
     store.updateFromHook(hook({ terminalId: 't1', event: 'running', command: 'echo hi' }))
     expect(useAgentStore.getState().status).toBe('working')
-    expect(useAgentStore.getState().currentTask).toBe('echo hi')
+    expect(useAgentStore.getState().terminalStates.t1?.command).toBe('echo hi')
 
     store.updateFromHook(hook({ terminalId: 't1', event: 'finished', exitCode: 0 }))
     expect(useAgentStore.getState().status).toBe('idle')

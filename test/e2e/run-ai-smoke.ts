@@ -38,7 +38,7 @@ async function runAgentSmoke(client: CDPClient): Promise<void> {
   if (!['idle', 'thinking', 'working', 'error'].includes(status)) {
     throw new Error(`未知 data-agent-status: ${status}`)
   }
-  if (!/就绪|等待输入|运行中|错误|Ready|Waiting|Working|Error/i.test(label)) {
+  if (!/就绪|等待输入|运行中|错误|Hook 不可用|Ready|Waiting|Working|Error|Hooks unavailable/i.test(label)) {
     throw new Error(`未在状态栏检测到 AI 状态文本：${label}`)
   }
 

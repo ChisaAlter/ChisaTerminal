@@ -95,8 +95,17 @@ function isValidTerminalId(id: unknown): id is string {
 }
 
 ipcMain.handle(IPC_CHANNELS.PTY.CREATE, async (event, terminalId: string, cwd?: string) => {
-  if (!isValidTerminalId(terminalId)) return
+  if (!isValidTerminalId(terminalId)) return { ok: false, error: 'invalid-terminal-id' }
   const webContents = event.sender
+  // Reject hijack attempts: a terminalId already owned by another webContents
+  // must not be re-bound (would redirect its output stream to the caller).
+  const ownerId = getOwnerWebContentsId(terminalId)
+  if (ownerId !== undefined && ownerId !== webContents.id) {
+    console.warn(
+      `[PTY] Rejected create for ${terminalId}: owned by wc=${ownerId}, requested by wc=${webContents.id}`
+    )
+    return { ok: false, error: 'owned-by-other-webcontents' }
+  }
   trackTerminal(webContents, terminalId)
 
   if (!outputBuffers.has(terminalId)) {
@@ -141,6 +150,7 @@ ipcMain.handle(IPC_CHANNELS.PTY.CREATE, async (event, terminalId: string, cwd?: 
     }
     outputBuffers.delete(terminalId)
   })
+  return { ok: true }
 })
 
 ipcMain.on(IPC_CHANNELS.PTY.WRITE, (event, terminalId: string, data: string) => {

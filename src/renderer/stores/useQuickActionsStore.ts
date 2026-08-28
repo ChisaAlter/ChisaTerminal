@@ -44,10 +44,11 @@ export function escapeShellArg(
 ): string {
   if (SAFE_SHELL_ARG_RE.test(value)) return value
   if (platform === 'win32') {
-    // Windows (cmd/PowerShell): wrap in double quotes. Escape only double quotes
-    // (as \") and percent signs (as %%, to prevent cmd variable expansion).
-    // Backslashes are path separators and must NOT be doubled.
-    return `"${value.replace(/"/g, '\\"').replace(/%/g, '%%')}"`
+    // Windows terminals spawn PowerShell (see PtySession). Single quotes are
+    // literal in PowerShell — no interpolation of `$`, backticks or `$(...)`.
+    // The only character needing escaping inside is the single quote itself,
+    // doubled per PowerShell quoting rules.
+    return `'${value.replace(/'/g, "''")}'`
   }
   // Unix (bash): wrap in double quotes and escape backslash, double quote,
   // backtick, and dollar sign.

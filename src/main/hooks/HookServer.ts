@@ -2,7 +2,8 @@ import net from 'node:net'
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs'
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
+import { StringDecoder } from 'node:string_decoder'
 import type { HookMessage, HookMessageInternal } from '../../shared/types.js'
 
 // Windows: \\.\pipe\chisa-hook-<pid>
@@ -44,9 +45,13 @@ export class HookServer {
     return this.hookToken
   }
 
-  /** 校验客户端提交的 token 是否有效。 */
+  /** 校验客户端提交的 token 是否有效（常量时间比较，避免时序侧信道）。 */
   validateToken(token: string): boolean {
-    return token === this.hookToken && this.hookToken.length > 0
+    if (this.hookToken.length === 0) return false
+    // 先哈希两侧再比较：timingSafeEqual 要求等长输入，哈希后长度恒定
+    const a = createHash('sha256').update(token).digest()
+    const b = createHash('sha256').update(this.hookToken).digest()
+    return timingSafeEqual(a, b)
   }
 
   start(): Promise<boolean> {
@@ -56,8 +61,11 @@ export class HookServer {
     this.server = net.createServer((socket) => {
       this.clients.add(socket)
       let buffer = ''
+      // StringDecoder 缓存跨 chunk 边界的不完整 UTF-8 序列，
+      // 避免多字节字符（如中文路径）被 TCP 分片截断后解码成乱码
+      const decoder = new StringDecoder('utf8')
       socket.on('data', (chunk) => {
-        buffer += chunk.toString()
+        buffer += decoder.write(chunk)
         // 接收缓冲区超过 1MB 视为异常（DoS / 客户端 bug），立即断开。
         if (buffer.length > MAX_BUFFER_BYTES) {
           console.warn(

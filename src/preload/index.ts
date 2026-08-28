@@ -6,7 +6,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 // Keep in sync with src/shared/constants.ts IPC_CHANNELS
-const CH = {
+// (parity is enforced by test/unit/preload-channel-map.test.ts)
+export const PRELOAD_IPC_CHANNELS = {
   PTY: {
     CREATE: 'pty:create',
     WRITE: 'pty:write',
@@ -40,6 +41,13 @@ const CH = {
     OPEN_URL: 'browser:openUrl',
   },
 } as const
+
+const CH = PRELOAD_IPC_CHANNELS
+
+export interface StorageSetResult {
+  ok: boolean
+  error?: string
+}
 
 export type HookMessage = {
   terminalId: string
@@ -200,7 +208,7 @@ declare global {
       }
       storage: {
         get: (key: string) => Promise<unknown>
-        set: (key: string, value: unknown) => Promise<void>
+        set: (key: string, value: unknown) => Promise<StorageSetResult | undefined>
       }
       app: {
         reloadShortcuts: () => Promise<void>

@@ -2,12 +2,12 @@ export const zhCN = {
   'app.title': 'ChisaTerminal',
   'common.loading': '加载中...',
   'common.load_error': '组件加载失败，请重载窗口',
+  'common.retry': '重试',
 
   'tab.new': '新建标签',
   'tab.close': '关闭标签',
   'tab.terminal': '终端',
   'tab.terminal_n': '终端 {{n}}',
-  'tab.new_default': '新标签',
 
   'workspace.new': '新建工作区',
   'workspace.default': '工作区-{{n}}',
@@ -19,7 +19,6 @@ export const zhCN = {
   'pane.empty': '暂无终端',
 
   'browser.open': '打开右侧浏览器',
-  'browser.toggle': '打开/关闭绑定浏览器',
   'browser.close': '关闭浏览器侧栏',
   'browser.refresh': '刷新页面',
   'browser.address_placeholder': '输入 URL 或端口号...',
@@ -36,6 +35,7 @@ export const zhCN = {
   'terminal.exited': '进程已退出，代码 {{code}}',
   'terminal.browser_fallback': '在浏览器中运行 - PTY 不可用',
   'terminal.label': '终端',
+  'terminal.crashed': '该终端崩溃，点击重试恢复',
 
   'context_menu.label': '终端上下文菜单',
 
@@ -131,6 +131,10 @@ export const zhCN = {
   'shortcuts.split_vertical': '垂直分屏',
   'shortcuts.split_horizontal': '水平分屏',
   'shortcuts.command_palette': '命令面板',
+  'shortcuts.search': '终端内搜索',
+  'shortcuts.open_settings': '打开设置',
+  'shortcuts.zoom': '放大 / 缩小',
+  'shortcuts.zoom_reset': '重置缩放',
   'shortcuts.global_toggle': '全局显示/隐藏',
 
   'quick_actions.title': '快速动作',
@@ -156,4 +160,7 @@ export const zhCN = {
   'agent.exit_code': '退出码 {{code}}',
   'agent.status_bar_label': 'Agent 状态：{{status}}',
   'agent.hooks_unavailable': 'Hook 不可用（仅 Windows PowerShell 完整支持）',
+
+  'toast.persist_failed': '设置保存失败，最近的更改可能不会被保留。',
+  'toast.dismiss': '知道了',
 }

@@ -2,12 +2,12 @@ export const en = {
   'app.title': 'ChisaTerminal',
   'common.loading': 'Loading...',
   'common.load_error': 'Component failed to load. Please reload the window.',
+  'common.retry': 'Retry',
 
   'tab.new': 'New Tab',
   'tab.close': 'Close Tab',
   'tab.terminal': 'Terminal',
   'tab.terminal_n': 'Terminal {{n}}',
-  'tab.new_default': 'New Tab',
 
   'workspace.new': 'New Workspace',
   'workspace.default': 'Workspace-{{n}}',
@@ -19,7 +19,6 @@ export const en = {
   'pane.empty': 'No terminal',
 
   'browser.open': 'Open Browser Sidecar',
-  'browser.toggle': 'Toggle Bound Browser',
   'browser.close': 'Close browser sidecar',
   'browser.refresh': 'Refresh page',
   'browser.address_placeholder': 'Enter URL or port...',
@@ -36,6 +35,7 @@ export const en = {
   'terminal.exited': 'Process exited with code {{code}}',
   'terminal.browser_fallback': 'Running in browser - PTY unavailable',
   'terminal.label': 'Terminal',
+  'terminal.crashed': 'This terminal crashed. Click retry to restore it.',
 
   'context_menu.label': 'Terminal context menu',
 
@@ -131,6 +131,10 @@ export const en = {
   'shortcuts.split_vertical': 'Split Vertical',
   'shortcuts.split_horizontal': 'Split Horizontal',
   'shortcuts.command_palette': 'Command Palette',
+  'shortcuts.search': 'Search in Terminal',
+  'shortcuts.open_settings': 'Open Settings',
+  'shortcuts.zoom': 'Zoom In / Out',
+  'shortcuts.zoom_reset': 'Reset Zoom',
   'shortcuts.global_toggle': 'Global show/hide',
 
   'quick_actions.title': 'Quick Actions',
@@ -156,4 +160,7 @@ export const en = {
   'agent.exit_code': 'Exit code {{code}}',
   'agent.status_bar_label': 'Agent status: {{status}}',
   'agent.hooks_unavailable': 'Hooks unavailable (full support: Windows PowerShell only)',
+
+  'toast.persist_failed': 'Failed to save settings — recent changes may be lost.',
+  'toast.dismiss': 'Dismiss',
 }

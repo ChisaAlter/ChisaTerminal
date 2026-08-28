@@ -36,12 +36,11 @@ describe('pixelateImage', () => {
       private _src = ''
       set src(value: string) {
         this._src = value
-        const self = this
         queueMicrotask(() => {
           if (value === 'not-a-valid-image-url' || !value.startsWith('data:')) {
-            self.onerror?.()
+            this.onerror?.()
           } else {
-            self.onload?.()
+            this.onload?.()
           }
         })
       }

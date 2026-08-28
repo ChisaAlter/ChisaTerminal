@@ -1,5 +1,5 @@
 import { globalShortcut } from 'electron'
-import { toggleMainWindow, getMainWindow } from './window.js'
+import { toggleMainWindow } from './window.js'
 import { store } from './store.js'
 import { DEFAULT_SETTINGS_KEY, LEGACY_SETTINGS_KEY } from '../shared/constants.js'
 import type { AppSettings } from '../shared/settings.js'
@@ -34,12 +34,12 @@ export function registerGlobalShortcut(): void {
     if (success) {
       currentHotkey = accelerator
     } else {
+      // 注册失败只记录日志：曾经向 renderer 发送 'shortcut:registerResult'，
+      // 但该通道从未被 preload 暴露或监听，属于无效通知，已移除
       console.warn(`[Shortcuts] Failed to register global shortcut: ${accelerator} (already registered?)`)
-      getMainWindow()?.webContents.send('shortcut:registerResult', { success: false, accelerator })
     }
   } catch (err) {
     console.warn('[Shortcuts] Failed to register global shortcut:', err)
-    getMainWindow()?.webContents.send('shortcut:registerResult', { success: false, accelerator })
   }
 }
 

@@ -83,12 +83,21 @@ function clearLegacyThemeStorage(): void {
   }
 }
 
+/** 标记一次持久化失败，供 UI（App 底部提示条）提示用户设置可能不会被保存。 */
+export function reportPersistError(): void {
+  useSettingsStore.setState({ persistError: true })
+}
+
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 function scheduleSave(settings: AppSettings) {
   if (!useSettingsStore.getState().isLoaded) return
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
-    storage?.set?.(DEFAULT_SETTINGS_KEY, settings).catch(() => {})
+    storage?.set?.(DEFAULT_SETTINGS_KEY, settings)
+      .then((result) => {
+        if (result && result.ok === false) reportPersistError()
+      })
+      .catch(() => reportPersistError())
     saveTimer = null
   }, 400)
 }
@@ -96,6 +105,9 @@ function scheduleSave(settings: AppSettings) {
 interface SettingsState {
   settings: AppSettings
   isLoaded: boolean
+  /** 最近一次持久化是否失败（用于 UI 提示，dismiss 后清除） */
+  persistError: boolean
+  clearPersistError: () => void
   setSettings: (settings: AppSettings) => void
   updateSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void
   patchSettings: (partial: Partial<AppSettings>) => void
@@ -107,6 +119,8 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   settings: { ...DEFAULT_SETTINGS },
   isLoaded: false,
+  persistError: false,
+  clearPersistError: () => set({ persistError: false }),
   setSettings: (settings: AppSettings) => set({ settings }),
   updateSetting: (key, value) => {
     set((state) => ({

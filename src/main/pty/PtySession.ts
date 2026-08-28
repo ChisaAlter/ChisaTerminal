@@ -36,13 +36,15 @@ export class PtySession {
     const hookPipe =
       process.env.CHISA_HOOK_PIPE ?? process.env.MUX0_HOOK_PIPE ?? ''
 
+    const isWindows = process.platform === 'win32'
     const ptyEnv: Record<string, string> = {
       PATH: process.env.PATH ?? '',
       USERPROFILE: process.env.USERPROFILE ?? homeDir,
       HOME: process.env.HOME ?? homeDir,
       APPDATA: process.env.APPDATA ?? '',
       LOCALAPPDATA: process.env.LOCALAPPDATA ?? '',
-      LANG: process.env.LANG ?? 'zh-CN.UTF-8',
+      // 非 Windows 上默认 C.UTF-8（zh-CN 默认仅用于 Windows 中文环境）
+      LANG: process.env.LANG ?? (isWindows ? 'zh-CN.UTF-8' : 'C.UTF-8'),
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
       COMSPEC: process.env.COMSPEC ?? '',
@@ -57,6 +59,34 @@ export class PtySession {
     for (const key of ['SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'USERNAME', 'COMPUTERNAME', 'NUMBEROF_PROCESSORS', 'PROCESSOR_ARCHITECTURE', 'PATHEXT']) {
       const val = process.env[key]
       if (val) ptyEnv[key] = val
+    }
+    if (!isWindows) {
+      // Linux/macOS：透传身份、图形会话与常用 XDG/SSH 变量，
+      // 否则子 shell 里 GUI 程序、ssh-agent、locale 相关工具会失效
+      for (const key of [
+        'USER',
+        'LOGNAME',
+        'SHELL',
+        'DISPLAY',
+        'WAYLAND_DISPLAY',
+        'XAUTHORITY',
+        'DBUS_SESSION_BUS_ADDRESS',
+        'SSH_AUTH_SOCK',
+        'XDG_RUNTIME_DIR',
+        'XDG_DATA_DIRS',
+        'XDG_CONFIG_DIRS',
+        'XDG_DATA_HOME',
+        'XDG_CONFIG_HOME',
+        'XDG_CACHE_HOME',
+        'XDG_SESSION_TYPE',
+        'XDG_CURRENT_DESKTOP',
+        'LC_ALL',
+        'LC_CTYPE',
+        'TMPDIR',
+      ]) {
+        const val = process.env[key]
+        if (val) ptyEnv[key] = val
+      }
     }
 
     // Windows: PowerShell - 加载内置 hook profile

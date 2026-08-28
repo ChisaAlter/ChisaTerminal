@@ -343,7 +343,9 @@ function TerminalView({
     try {
       const text = await navigator.clipboard.readText()
       if (text) {
-        api?.pty?.write?.(terminalId, text)
+        // term.paste() applies bracketed-paste mode so multi-line pastes are
+        // not executed line-by-line by the shell.
+        termRef.current?.paste(text)
       }
     } catch (err) {
       console.warn('Paste failed:', err)
@@ -414,18 +416,19 @@ function TerminalView({
 
 function TerminalViewWithErrorBoundary(props: TerminalViewProps) {
   const [retryKey, setRetryKey] = useState(0)
+  const { t } = useTranslation()
   return (
     <ErrorBoundary
       key={retryKey}
       fallback={
         <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4 text-red-500 text-sm">
-          <span>该终端崩溃，点击重试</span>
+          <span>{t('terminal.crashed')}</span>
           <button
             type="button"
             onClick={() => setRetryKey((k) => k + 1)}
             className="px-3 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700"
           >
-            重试
+            {t('common.retry')}
           </button>
         </div>
       }

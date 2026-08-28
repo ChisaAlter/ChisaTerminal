@@ -30,8 +30,50 @@ const WALLPAPER_MIME_BY_EXT: Record<string, string> = {
   '.gif': 'image/gif',
 }
 
+/** 从 settings 中读取当前引用的壁纸文件名（chisa-wallpaper://<name>）。 */
+function getReferencedWallpaperFilename(): string | null {
+  try {
+    const settings = store.get(DEFAULT_SETTINGS_KEY) as { wallpaperUrl?: unknown } | undefined
+    const url = settings?.wallpaperUrl
+    if (typeof url !== 'string' || !url.startsWith('chisa-wallpaper://')) return null
+    const name = url.slice('chisa-wallpaper://'.length).replace(/^\/+/, '')
+    return name || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 删除 wallpapers 目录中未被引用的文件（GC）。
+ * keep 为额外保留的文件名（如刚保存尚未写回 settings 的新壁纸）。
+ */
+async function gcWallpapers(keep: Iterable<string> = []): Promise<void> {
+  try {
+    const dir = path.join(app.getPath('userData'), WALLPAPER_DIR_NAME)
+    const keepSet = new Set<string>(keep)
+    const referenced = getReferencedWallpaperFilename()
+    if (referenced) keepSet.add(referenced)
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+    await Promise.all(
+      entries
+        .filter((e) => e.isFile() && !keepSet.has(e.name))
+        .map((e) =>
+          fs.promises.unlink(path.join(dir, e.name)).catch((err) => {
+            console.warn('[Wallpaper] GC failed to delete', e.name, err)
+          })
+        )
+    )
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+      console.warn('[Wallpaper] GC error:', err)
+    }
+  }
+}
+
 // 注册 chisa-wallpaper:// 自定义协议，避免 file:// URL 在 dev/prod 被 Chromium 拦截
 app.whenReady().then(() => {
+  // 启动时清理未被 settings 引用的壁纸文件
+  void gcWallpapers()
   protocol.handle('chisa-wallpaper', async (request) => {
     try {
       // request.url 形如 chisa-wallpaper://abc.png
@@ -83,16 +125,18 @@ ipcMain.handle(IPC_CHANNELS.STORAGE.SET, (_event, key: string, value: unknown) =
   try {
     if (typeof key !== 'string' || !WRITE_KEYS.has(key)) {
       console.warn(`[Storage] Rejected set for key: ${key}`)
-      return
+      return { ok: false, error: 'key-not-allowed' }
     }
     const serialized = JSON.stringify(value)
     if (serialized.length > MAX_VALUE_SIZE) {
       console.error(`[Storage] Value for key ${key} exceeds max size (${serialized.length} bytes)`)
-      return
+      return { ok: false, error: 'value-too-large' }
     }
     store.set(key, value)
+    return { ok: true }
   } catch (err) {
     console.error('[Storage] set error:', err)
+    return { ok: false, error: err instanceof Error ? err.message : 'unknown-error' }
   }
 })
 
@@ -126,6 +170,8 @@ ipcMain.handle(IPC_CHANNELS.WALLPAPER.SAVE, async (_event, dataUrl: unknown) => 
     await fs.promises.mkdir(dir, { recursive: true })
     const filePath = path.join(dir, `${hash}${ext}`)
     await fs.promises.writeFile(filePath, buffer)
+    // GC 旧壁纸：保留刚写入的新文件与 settings 当前引用的文件
+    void gcWallpapers([`${hash}${ext}`])
     return `chisa-wallpaper://${hash}${ext}`
   } catch (err) {
     console.error('[Wallpaper] save error:', err)
